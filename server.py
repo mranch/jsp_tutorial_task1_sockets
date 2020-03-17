@@ -20,12 +20,33 @@ goods = {
 }
 
 
+def validate_data(data):
+    if 'drink' not in data:
+        print("You did not order a drink!")
+    elif data['drink'] not in goods['drinks']:
+        print("Some unknown drink!")
+    elif goods['drinks'][data['drink']] == 0:
+        print("You are late! No such drink left!")
+    else:
+        print("You ordered " + data['drink'])
+        goods['drinks'][data['drink']] -= 1
+    if 'add' in data:
+        if data['add'] not in goods['adds']:
+            print("Some unknown add!")
+        elif goods['adds'][data['add']] == 0:
+            print("No such add left!")
+        else:
+            print("Oh! You also want " + data['add'])
+            goods['adds'][data['add']] -= 1
+
+
 def receive_order(client_sock):
     message = client_sock.recv(100)
     message_len = int(message[:HEADER_SIZE])
     print(f"Message_len {message_len}")
     message = pickle.loads(message[HEADER_SIZE:])
     print(message)
+    validate_data(message)
 
 
 if __name__ == "__main__":

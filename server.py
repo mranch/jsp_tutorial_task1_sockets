@@ -20,24 +20,48 @@ goods = {
 }
 
 
-def validate_data(data):
-    if 'drink' not in data:
-        print("You did not order a drink!")
-    elif data['drink'] not in goods['drinks']:
-        print("Some unknown drink!")
-    elif goods['drinks'][data['drink']] == 0:
-        print("You are late! No such drink left!")
-    else:
-        print("You ordered " + data['drink'])
-        goods['drinks'][data['drink']] -= 1
-    if 'add' in data:
-        if data['add'] not in goods['adds']:
-            print("Some unknown add!")
-        elif goods['adds'][data['add']] == 0:
-            print("No such add left!")
+class MakeDrinkException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+def make_drink(drink, add=None):
+    goods['drinks'][drink] -= 1
+    if add:
+        goods['adds'][add] -= 1
+
+
+def send_response(status_code, message):
+    return {
+        "status code": status_code,
+        "message": message
+    }
+
+
+def process_order(data):
+    try:
+        if 'drink' not in data:
+            raise MakeDrinkException("You did not order a drink!")
+        elif data['drink'] not in goods['drinks']:
+            raise MakeDrinkException("Some unknown drink!")
+        elif goods['drinks'][data['drink']] == 0:
+            raise MakeDrinkException("You are late! No such drink left!")
         else:
-            print("Oh! You also want " + data['add'])
-            goods['adds'][data['add']] -= 1
+            if 'add' in data:
+                if data['add'] not in goods['adds']:
+                    raise MakeDrinkException("Some unknown add!")
+                elif goods['adds'][data['add']] == 0:
+                    raise MakeDrinkException("No such add left!")
+                else:
+                    make_drink(data['drink'], data['add'])
+                    message = f"You successfully ordered {data['drink']} with {data['add']}!"
+            else:
+                make_drink(data['drink'])
+                message = f"You successfully ordered {data['drink']}!"
+    except MakeDrinkException as e:
+        return send_response(404, e.message)
+    else:
+        return send_response(201, message)
 
 
 def receive_order(client_sock):
@@ -46,7 +70,7 @@ def receive_order(client_sock):
     print(f"Message_len {message_len}")
     message = pickle.loads(message[HEADER_SIZE:])
     print(message)
-    validate_data(message)
+    return process_order(message)
 
 
 if __name__ == "__main__":
@@ -56,7 +80,9 @@ if __name__ == "__main__":
 
     while True:
         client_socket, address = s.accept()
-        receive_order(client_socket)
+        received_order = receive_order(client_socket)
+        resp = pickle.dumps(received_order)
+        client_socket.send(resp)
         # resp = bytes(f"'you sent': {message}", "utf-8")
         # resp = pickle.dumps(resp)
         # client_socket.send(resp)

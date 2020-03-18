@@ -39,8 +39,12 @@ if __name__ == "__main__":
     second_order = {
         "drink": "soda"
     }
-    order_drink(first_order, s)
+
+    # order_drink(first_order, s)
+    # resp = s.recv(100)
+    # print(pickle.loads(resp))
+
+    order_drink(second_order, s)
     while True:
         resp = s.recv(100)
-
         print(pickle.loads(resp))

@@ -80,13 +80,22 @@ def process_order(data):
         return send_response(201, message)
 
 
-def receive_order(client_sock):
-    message = client_sock.recv(100)
+def check_history():
+    for order in orders:
+        print(order)
+    return send_response(202, orders)
+
+
+def receive_command(client_sock):
+    message = client_sock.recv(200)
     message_len = int(message[:HEADER_SIZE])
     print(f"Message_len {message_len}")
     message = pickle.loads(message[HEADER_SIZE:])
     print(message)
-    return process_order(message)
+    if message['command type'] == 'order drink':
+        return process_order(message['data'])
+    elif message['command type'] == 'check history':
+        return check_history()
 
 
 if __name__ == "__main__":
@@ -96,6 +105,9 @@ if __name__ == "__main__":
 
     while True:
         client_socket, address = s.accept()
-        received_order = receive_order(client_socket)
-        resp = pickle.dumps(received_order)
+        received_command = receive_command(client_socket)
+        print("PPPPPPPPPPPPPPPPPPPPPP")
+        print(received_command)
+        print("PPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
+        resp = pickle.dumps(received_command)
         client_socket.send(resp)

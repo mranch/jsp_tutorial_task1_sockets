@@ -1,11 +1,8 @@
 import socket
 import pickle
-from functools import reduce
 
 IP = '127.0.0.1'
 PORT = 1234
-drinks = ['coffee', 'water', 'soda']
-adds = ['milk', 'sugar']
 HEADER_SIZE = 10
 goods = {
     "drinks": {
@@ -18,6 +15,22 @@ goods = {
         "sugar": 8
     }
 }
+current_order_id = 1
+orders = []
+
+
+def update_order_list(drink, add=None):
+    global current_order_id
+    order_info = {
+            "order id": current_order_id,
+            "order content": {
+                "drink": drink
+            }
+        }
+    if add:
+        order_info['order content']['add'] = add
+    orders.append(order_info)
+    current_order_id += 1
 
 
 class MakeDrinkException(Exception):
@@ -47,17 +60,20 @@ def process_order(data):
         elif goods['drinks'][data['drink']] == 0:
             raise MakeDrinkException("You are late! No such drink left!")
         else:
-            if 'add' in data:
+            message = f"You successfully ordered {data['drink']}"
+            if 'add' not in data:
+                make_drink(data['drink'])
+                update_order_list(data['drink'])
+            else:
                 if data['add'] not in goods['adds']:
                     raise MakeDrinkException("Some unknown add!")
                 elif goods['adds'][data['add']] == 0:
                     raise MakeDrinkException("No such add left!")
                 else:
                     make_drink(data['drink'], data['add'])
-                    message = f"You successfully ordered {data['drink']} with {data['add']}!"
-            else:
-                make_drink(data['drink'])
-                message = f"You successfully ordered {data['drink']}!"
+                    update_order_list(data['drink'], data['add'])
+                    message += f" with {data['add']}"
+            message += "!"
     except MakeDrinkException as e:
         return send_response(404, e.message)
     else:
@@ -76,13 +92,10 @@ def receive_order(client_sock):
 if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((IP, PORT))
-    s.listen(5)
+    s.listen(50)
 
     while True:
         client_socket, address = s.accept()
         received_order = receive_order(client_socket)
         resp = pickle.dumps(received_order)
         client_socket.send(resp)
-        # resp = bytes(f"'you sent': {message}", "utf-8")
-        # resp = pickle.dumps(resp)
-        # client_socket.send(resp)

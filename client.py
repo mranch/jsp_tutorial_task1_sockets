@@ -81,10 +81,10 @@ if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((IP, PORT))
     try:
-        user_choice = int(input("Please choose one of the following options:\n"
-                            "1. Order a drink\n"
-                            "2. Check order history\n"
-                            "3. Check remaining resources\n"))
+        user_choice = int(input("""Please choose one of the following options:
+1. Order a drink
+2. Check order history
+3. Check remaining resources\n"""))
     except ValueError:
         print("Wrong input! Try again")
     else:

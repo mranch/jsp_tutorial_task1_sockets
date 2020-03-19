@@ -1,5 +1,6 @@
 import socket
 import pickle
+import my_sqlite_db
 
 IP = '127.0.0.1'
 PORT = 1234
@@ -32,6 +33,9 @@ def update_order_list(drink, add=None):
     orders.append(order_info)
     current_order_id += 1
 
+    # my_sqlite_db
+    my_sqlite_db.create_order(drink, add)
+
 
 class MakeDrinkException(Exception):
     def __init__(self, message):
@@ -42,6 +46,9 @@ def make_drink(drink, add=None):
     goods['drinks'][drink] -= 1
     if add:
         goods['adds'][add] -= 1
+
+    # sqlite3 db
+    my_sqlite_db.make_drink(drink, add)
 
 
 def send_response(status_code, message):

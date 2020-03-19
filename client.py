@@ -51,8 +51,22 @@ def check_history(sock):
         print(order_info)
 
 
-def check_resources():
-    pass
+def check_resources(sock):
+    check_resources_command = CoffeeMachineCommand(
+        {
+            "command type": 'check resources'
+        }
+    )
+    check_resources_command.send(sock)
+    received_response = s.recv(1000)
+    resp = pickle.loads(received_response)
+    goods = resp['message']
+    print("Here are the drinks that are left:")
+    for drink in goods['drinks']:
+        print(f"{goods['drinks'][drink]} items of {drink}")
+    print("Here are the adds that are left:")
+    for add in goods['adds']:
+        print(f"{goods['adds'][add]} items of {add}")
 
 
 def order_drink(sock):
@@ -93,6 +107,6 @@ if __name__ == "__main__":
         elif user_choice == 2:
             check_history(s)
         elif user_choice == 3:
-            check_resources()
+            check_resources(s)
         else:
             print("We do not have so much options yet or you input wrong number! :)")

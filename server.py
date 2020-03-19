@@ -86,6 +86,10 @@ def check_history():
     return send_response(202, orders)
 
 
+def check_resources():
+    return send_response(203, goods)
+
+
 def receive_command(client_sock):
     message = client_sock.recv(200)
     message_len = int(message[:HEADER_SIZE])
@@ -96,6 +100,8 @@ def receive_command(client_sock):
         return process_order(message['data'])
     elif message['command type'] == 'check history':
         return check_history()
+    elif message['command type'] == 'check resources':
+        return check_resources()
 
 
 if __name__ == "__main__":
